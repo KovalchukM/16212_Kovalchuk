@@ -3,6 +3,41 @@
 
 #define SIZE 64
 
+int Dex_to_bin(int nymber, FILE *out)
+{
+	int count = 0;
+	char bin[] = "000000";
+	while (nymber > 0)
+	{
+		if (nymber % 2 == 1)
+			bin[5 - count] = '1';
+		nymber = nymber / 2;
+		count++;
+	}
+	fprintf(out, "%s", bin );
+}
+
+int bin_to_dex(char *elem)
+{
+	int nymber = 0;
+	int n = 0;
+	int c = 1;
+	for(int i = 5; i >= 0; i = i - 1)
+	{
+		if (elem[i] == '1')
+		{
+			for (int k = 0; k < n ; k++)
+				c = c * 2;
+			printf("%d\n", c);
+			nymber = nymber + c;
+		}
+		n++;
+		c = 1;
+	}
+	printf("%s\n","AAAAAA" );
+	return(nymber);
+}
+
 int to_Base(char *Library)
 {
 	char elem;
@@ -13,12 +48,13 @@ int to_Base(char *Library)
 	base64 = fopen ( "tobase.txt", "r");
 	if (base64 == NULL)
 		return (1);
-	while (1)
+	while (1 > 0)
 	{
-		if (feof(base64) != 0)
-			break;
 		elem = fgetc(base64);
-		printf("elem = %c\n",elem );
+		if ( elem == EOF)
+		{
+			break;
+		}
 		for (int i = 0; i < SIZE; i++)
 			if (Library[i] == elem)
 			{
@@ -31,37 +67,18 @@ int to_Base(char *Library)
 	fclose (out);
 }
 
-int Dex_to_bin(int nymber, FILE out)
-{
-	int c = 0;
-	int k = 0;
-	char bin[] = "00000";
-	while (nymber > 0)
-	{
-		if (nymber % 2 == 1)
-			bin[4 - k] = "1";
-		nymber = nymber/2;
-		k++;
-	}
-	printf("%s", bin );
-	printf("\n");
-}
 int From_Base( char *Library)
 {
 	int nymber;
-	char elem[5];
+	char elem[6];
 	char symbol;
 	FILE *base64;
 	FILE *out;
 	base64 = fopen("Frombase.txt", "r");
 	out = fopen("Frombase.orig.txt", "w+");
-	if (base64 == NULL)
-		return(1);
-	while(1)
+	while(feof (base64) == 0)
 	{
-		if (feof (base64) != 0)
-			break;
-		for (int i = 0; i < 5; i++)
+		for (int i = 0; i < 6; i++)
 		{
 			elem[i] = fgetc(base64);
 		}
@@ -73,24 +90,6 @@ int From_Base( char *Library)
 	fclose (out);
 }
 
-int bin_to_dex(char *elem)
-{
-	int nymber = 0;
-	int n = 0;
-	int c = 1;
-	for(int i = 4; i >= 0; i = i - 1)
-	{
-		if (elem[i] == 1)
-		{
-			for (int i = 0; i < n ; i++)
-				c = c * 2;
-			nymber = nymber + c;
-		}
-		n++;
-	}
-	return(nymber);
-}
-
 int main ()
 {
 	char Library[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -100,7 +99,7 @@ int main ()
 	scanf ("%d",&n);
 	if (n != 1 && n != 2)
 		return(1);
-	if (n = 1)
+	if (n == 1)
 		to_Base (Library);
 	else
 		From_Base (Library);
