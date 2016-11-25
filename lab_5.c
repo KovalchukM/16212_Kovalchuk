@@ -3,91 +3,103 @@
 
 #define SIZE 64
 
-int Dex_to_bin(int nymber, FILE *out)
-{
-	int count = 0;
-	char bin[] = "000000";
-	while (nymber > 0)
-	{
-		if (nymber % 2 == 1)
-			bin[5 - count] = '1';
-		nymber = nymber / 2;
-		count++;
-	}
-	fprintf(out, "%s", bin );
-}
-
-int bin_to_dex(char *elem)
-{
-	int nymber = 0;
-	int n = 0;
-	int c = 1;
-	for(int i = 5; i >= 0; i = i - 1)
-	{
-		if (elem[i] == '1')
-		{
-			for (int k = 0; k < n ; k++)
-				c = c * 2;
-			printf("%d\n", c);
-			nymber = nymber + c;
-		}
-		n++;
-		c = 1;
-	}
-	printf("%s\n","AAAAAA" );
-	return(nymber);
-}
-
 int to_Base(char *Library)
 {
-	char elem;
-	int nymber;
-	FILE *base64;
-	FILE *out;
-	out = fopen ( "out.base64.txt", "w+");
-	base64 = fopen ( "tobase.txt", "r");
-	if (base64 == NULL)
-		return (1);
-	while (1 > 0)
+	char elem[3];
+	char base_elem[4];
+	FILE *base64 = fopen ( "tobase.txt", "r");
+	FILE *out = fopen ( "out.base64.txt", "w+");
+	while (1)
 	{
-		elem = fgetc(base64);
-		if ( elem == EOF)
+		for (int i = 0; i < 3; i++)
+			{
+				elem[i] = fgetc(base64);
+			}
+		printf("elem =%c  %c   %c\n",elem[0], elem[1], elem[2] );
+		if (elem[0] == EOF)
+			break;
+		base_elem[0] = elem[0] >> 2;
+		if (elem[1] == EOF)
 		{
+			base_elem[1] = ((elem[0] << 4)& 0x3F);
+			fprintf(out, "%c",Library[base_elem[0]] );
+			fprintf(out, "%c",Library[base_elem[1]] );
+			fprintf(out, "%s","==" );
 			break;
 		}
-		for (int i = 0; i < SIZE; i++)
-			if (Library[i] == elem)
-			{
-				nymber = i;
-				break;
-			}
-		Dex_to_bin(nymber, out);
+		base_elem[1] = (((elem[0] << 4) | (elem[1] >> 4)) & 0x3F);
+		if (elem[2] == EOF)
+		{
+			base_elem[2] = ((elem[1] << 2) & 0x3F);
+			for (int i = 0; i < 3; i++)
+				fprintf(out, "%c",Library[base_elem[i]] );
+			fprintf(out, "%c", '=' );
+			break;
+		}
+		base_elem[2] = (((elem[1] << 2) | (elem[2] >> 6)) & 0x3F);
+		base_elem[3] = (elem[2] & 0x3F);
+		printf("base_elem =%d    %d     %d    %d\n",base_elem[0],base_elem[1],base_elem[2], base_elem[3] );
+		for (int i = 0 ; i < 4 ; i++)
+		{
+			fprintf(out, "%c", Library[base_elem[i]] );
+		}
 	}
+	printf("%s\n","coding complete" );
 	fclose (base64);
 	fclose (out);
 }
 
 int From_Base( char *Library)
 {
-	int nymber;
-	char elem[6];
-	char symbol;
+	char base_elem[4];
+	int base_elem_index[4];
+	char elem[3];
 	FILE *base64;
 	FILE *out;
-	base64 = fopen("Frombase.txt", "r");
-	out = fopen("Frombase.orig.txt", "w+");
-	while(feof (base64) == 0)
+	base64 = fopen("out.base64.txt", "r");
+	out = fopen("out.base64.orig.txt", "w+");
+	while(1)
 	{
-		for (int i = 0; i < 6; i++)
+		for (int i = 0; i < 4; i++)
 		{
-			elem[i] = fgetc(base64);
+			base_elem[i] = fgetc(base64);
+			for(int k = 0; k < SIZE; k++)
+			{
+				if (base_elem[i] == Library[k])
+					base_elem_index[i] = k;
+			}
 		}
-		nymber = bin_to_dex(elem);
-		symbol = Library[nymber];
-		fprintf(out, "%c", symbol );
+		if (base_elem[0] == EOF)
+			break;
+		if (base_elem[1] == '=')
+		{
+			elem[0] = (base_elem_index[0] << 2);
+			fprintf(out, "%c", elem[0] );
+			break;
+		}
+		elem[0] = (base_elem_index[0] << 2) | (base_elem_index[1] >> 4);
+		if ( base_elem[2] == '=')
+		{
+			elem[1] = (base_elem_index[1] << 4);
+			fprintf(out, "%c", elem[0] );
+			fprintf(out, "%c", elem[1] );
+			break;
+		}
+		elem[1] = (base_elem_index[1] << 4) | (base_elem_index[2] >> 2);
+		if ( base_elem[3] == '=')
+		{
+			elem[2] = (base_elem_index[2] << 6);
+			for (int i = 0; i < 3; i++)
+				fprintf(out, "%c", elem[i] );
+			break;
+		}
+		elem[2] = (base_elem_index[2] << 6) | base_elem_index[3];
+		for (int i = 0; i < 3; i++)
+			fprintf(out, "%c", elem[i] );
 	}
-	fclose (base64);
-	fclose (out);
+	printf("%s\n","decoding complete" );
+	fclose(base64);
+	fclose(out);
 }
 
 int main ()
@@ -97,10 +109,8 @@ int main ()
 	printf("%s\n", "press 2 to decoding" );
 	int n;
 	scanf ("%d",&n);
-	if (n != 1 && n != 2)
-		return(1);
 	if (n == 1)
 		to_Base (Library);
-	else
+	if (n == 2)
 		From_Base (Library);
 }
