@@ -17,34 +17,29 @@ struct list
 struct list *make_list ( FILE *input )
 {
 	int numeric = 0;
-	char read[10];
-	for (int i = 0; i < 10; i++)
+	char read = ' ';
+	while(1)
 	{
-		read[i] = ' ';
-	}
-	for(int i = 0; i < 10; i++)
-	{
-		read[i] = fgetc(input);
-		if (read[i] == ' ')
+		read = fgetc(input);
+		if (read == ' ')
 			break;
+		numeric = numeric * 10 + (read-'0');
 	}
-	numeric = atoi(read);
 	struct list *head = (struct list*)malloc(sizeof(struct list));
 	head ->x = numeric;
 	struct list *tail = head;
 	while (1)
 	{
-		int i = 0;
-		while (i < 10)
+		numeric = 0;
+		while (1)
 			{
-				read[i] = fgetc(input);
-				if (read[i] == ' ' || read[i] == EOF)
+				read = fgetc(input);
+				if (read == ' ' || read == EOF)
 					break;
-				i++;
+				numeric = numeric * 10 + read-('0');
 			}
-		if (read[0] == EOF)
+		if (read == EOF)
 			break;
-		numeric = atoi(read);
 		struct list *temp = (struct list*)malloc(sizeof(struct list));
 		temp -> x = numeric;
 		tail -> next = temp;
@@ -117,12 +112,11 @@ struct tree* make_root(struct list *head, int size)
 	for (temp = head; i < mid ; i++ )
 		temp = temp -> next;
 	root -> x = temp -> x;
-	printf("%d     ", root -> x);
 		root -> left = make_root( head, mid);
 	if (size % 2 != 0)
-		root -> right = make_root( temp ->next, mid);
+		root -> right = make_root( temp -> next, mid);
 	else
-		root -> right = make_root( temp ->next, mid - 1);
+		root -> right = make_root( temp -> next, mid - 1);
 	return(root);
 }
 
@@ -145,18 +139,32 @@ void tree_print(struct tree *root)
 	}
 }
 
+void tree_free(struct tree *root)
+{
+	if (root -> left != NULL)
+		tree_free(root -> left);
+	if (root -> right != NULL)
+		tree_free(root -> right);
+	free(root);
+}
+
 int main ( int argc , char *argv[])
 {
 	FILE *input = fopen ( argv[1], "r");
 	struct list *head = make_list(input);
 	fclose(input);
 	head = list_sort(head);
-	struct list *tail = head;
-	for (tail = head; tail -> next != NULL; tail = tail ->next)
-		printf("%d   ", tail ->x );
-	printf("%d\n", tail ->x );
+	struct list *tail = head -> next;
 	int size = list_size(head);
 	struct tree *root = make_root(head, size);
+	while(tail != NULL)
+	{
+		free(head);
+		head = tail;
+		tail = tail -> next;
+	}
+	free(head);
 	printf("%s\n","tree:" );
 	tree_print(root);
+	tree_free(root);
 }
