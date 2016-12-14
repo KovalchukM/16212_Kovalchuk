@@ -16,7 +16,6 @@ int to_Base(char *Library, char *input)
 	  }
 	while (1)
 	{
-		printf("%s\n","begin" );
 		int end_check = fread(elem, sizeof(char) , 3, base64);
 		if (end_check == 0)
 		{
