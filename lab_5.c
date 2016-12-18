@@ -23,8 +23,8 @@ int to_Base(char *Library, char *input)
 		}
 		if (end_check == 1)
 		{
-			base_elem[0] = elem[0] >> 2;
-			base_elem[1] = ((elem[0] << 4)& 0x3F);
+			base_elem[0] = (elem[0] & 0xFF) >> 2;
+			base_elem[1] = ((((elem[0] & 0xFF) << 4) | ((elem[1] & 0xFF) >> 4)) & 0x3F);
 			for (int i = 0; i < 2; i++)
 				base_elem[i] = Library[base_elem[i]];
 			base_elem[2] = '=';
@@ -34,9 +34,9 @@ int to_Base(char *Library, char *input)
 		}
 		if (end_check == 2)
 		{
-			base_elem[0] = elem[0] >> 2;
-			base_elem[1] = (((elem[0] << 4) | (elem[1] >> 4)) & 0x3F);
-			base_elem[2] = ((elem[1] << 2) & 0x3F);
+			base_elem[0] = (elem[0] & 0xFF) >> 2;
+			base_elem[1] = ((((elem[0] & 0xFF) << 4) | ((elem[1] & 0xFF) >> 4)) & 0x3F);
+			base_elem[2] = ((((elem[1] & 0xFF) << 2) | ((elem[2] & 0xFF) >> 6)) & 0x3F);
 			for (int i = 0; i < 3; i++)
 				base_elem[i] = Library[base_elem[i]];
 			base_elem[3] = '=';
