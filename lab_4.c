@@ -48,11 +48,12 @@ char *read_nymeric(int from)
 	char read [100] = {0};
 	scanf("%s",&read);
 	printf("\n");
-	char *nymeric = (char*)calloc(strlen(read), sizeof(char));
+	char *nymeric = (char*)calloc((strlen(read)+1), sizeof(char));
 	for (int i = 0; i < strlen(read); i++)
+	{
 		nymeric[i] = read[i];
+	}
 	int check = 0;
-	printf("aaa  %s\n", nymeric );
 	check = nymeric_verification(from, nymeric);
 	if (check == 1)
 	{
@@ -77,34 +78,41 @@ int read_to()
 	return(to);
 }
 
-void string_reverse(int *string, int lenght , int c)
+void string_reverse(int *string, int lenght , int c, int count)
 {
 	if( lenght > c)
 	{
 		int t = string[c];
 		string[c] = string[lenght];
 		string[lenght] = t;
-		string_reverse( string, --lenght , ++c);
+		string_reverse( string, --lenght , ++c, count);
 	}
 }
 
 int to_new_redix(int *new_nymeric_int ,int dex, int to)
 {
 	int count = 0;
+	int size = 10;
 	while (dex >= to)
 	{
-		if (count > strlen((char*) new_nymeric_int))
-			new_nymeric_int = realloc(new_nymeric_int , sizeof(int) * strlen((char*)new_nymeric_int) * 2);
+		if (count > size)
+		{
+			size = size*2;
+			new_nymeric_int = realloc(new_nymeric_int , sizeof(int) * size);
+		}
 		new_nymeric_int[count] = dex % to;
 		dex = dex / to;
 		count++;
 	}
-	if (count > strlen((char*) new_nymeric_int))
-		new_nymeric_int = realloc(new_nymeric_int , sizeof(int) * strlen((char*)new_nymeric_int) * 2);
+	if (count > size)
+	{
+		size = size*2;
+		new_nymeric_int = realloc(new_nymeric_int , sizeof(int) * size);
+	}
 	new_nymeric_int[count] = dex;
 	int c = 0;
-	string_reverse(new_nymeric_int, count , c);
-	return(count);
+	string_reverse(new_nymeric_int, count , c, count);
+	return(++count);
 }
 
 int to_dex(int *nymeric_int, int from , int size)
@@ -122,10 +130,10 @@ int to_dex(int *nymeric_int, int from , int size)
 	return(dex);
 }
 
-void translation(char *new_nymeric , int from, int to, char *nymeric)
+char *translation(int from, int to, char *nymeric)
 {
 	char library[] ="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-	int nymeric_int [strlen(nymeric)];
+	int nymeric_int [strlen(nymeric)-1];
 	for (int i = 0; i < strlen(nymeric); i++)
 	{
 		for (int k = 0; k < from ; k++)
@@ -136,19 +144,17 @@ void translation(char *new_nymeric , int from, int to, char *nymeric)
 			}
 		}
 	}
-	int dex = to_dex(nymeric_int, from , strlen(nymeric));
-	int *new_nymeric_int = (int*)calloc((strlen(new_nymeric)), sizeof(int));
+	int dex = to_dex(nymeric_int, from , strlen(nymeric)-1);
+	int *new_nymeric_int = (int*)calloc(10, sizeof(int));
 	int lenght = to_new_redix(new_nymeric_int , dex, to);
-	if (lenght > strlen(new_nymeric))
-	{
-		new_nymeric =(char*)realloc(new_nymeric, strlen((char*)new_nymeric_int) * sizeof(char));
-	}
-	for (int i = 0; i < lenght+1; i++)
+	char *new_nymeric =(char*)calloc((lenght+1), sizeof(char));
+	for (int i = 0; i < lenght; i++)
 	{
 		new_nymeric[i] = library[new_nymeric_int[i]];
 	}
-	printf("%s\n", new_nymeric );
+	printf("%s\n",new_nymeric );
 	free(new_nymeric_int);
+	return(new_nymeric);
 }
 
 int main()
@@ -157,33 +163,29 @@ int main()
 	char *nymeric = read_nymeric(from);
 	int to = read_to();
 	int flag = 0;
-	printf("1)%s\n",nymeric );
+	printf("nymeric %s\n", nymeric );
 	if (nymeric[0] == '-')
 	{
 		flag = 1;
-		for (int i = 0; i < strlen(nymeric) - 1; i++)
+		for (int i = 0; i < (strlen(nymeric) - 1); i++)
 		{
 			nymeric[i] = nymeric[i+1];
 		}
-		nymeric = (char*)realloc(nymeric , sizeof(char) * (strlen(nymeric) - 1));
+		nymeric[(strlen(nymeric) - 1)] = ' ';
 	}
-	char *new_nymeric = (char*)calloc(20, sizeof(char));
-	printf("2)%s\n", nymeric );
-	translation(new_nymeric , from , to , nymeric);
-	printf("%s\n","AAAA" );
+	char *new_nymeric = translation(from , to , nymeric);
 	if (flag == 1)
 	{
-		new_nymeric =(char*)realloc(new_nymeric, sizeof(char) *(strlen(new_nymeric) + 1));
-		for (int i = strlen(new_nymeric) - 1; i > 0 ; i--)
+		new_nymeric =(char*)realloc(new_nymeric, sizeof(char) *(strlen(new_nymeric) + 2));
+		for (int i = strlen(new_nymeric)+1; i > 0 ; i--)
 		{
 			new_nymeric[i] = new_nymeric[i-1];
 		}
 		new_nymeric[0] = '-';
 	}
-	printf("nymeric %s", nymeric );
 	printf(" of the base system %d", from );
 	printf(" translated to base system %d", to );
-	printf(" a %s\n",new_nymeric );
+	printf(" a %s\n", new_nymeric );
 	free (new_nymeric);
 	free (nymeric);
 }
