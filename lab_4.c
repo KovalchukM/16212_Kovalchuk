@@ -4,7 +4,8 @@
 
 int nymeric_verification(int from, char *nymeric)
 {
-	char library[] ="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	char library1[] ="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	char library2[] ="0123456789abcdefghijklmnopqrstuvwxyz";
 	int l = strlen(nymeric);
 	int count = 0;
 	int i = 0;
@@ -17,7 +18,25 @@ int nymeric_verification(int from, char *nymeric)
 	{
 		for (int k = 0; k < from ;k++)
 		{
-			if (library[k] == nymeric[i])
+			if (library1[k] == nymeric[i])
+				count++;
+		}
+		i++;
+	}
+	if (count == l)
+		return(0);
+	i = 0;
+	count = 0;
+	if (nymeric[0] == '-')
+	{
+		count++;
+		i++;
+	}
+	while( i < l )
+	{
+		for (int k = 0; k < from ;k++)
+		{
+			if (library2[k] == nymeric[i])
 				count++;
 		}
 		i++;
@@ -44,23 +63,31 @@ int read_from()
 
 char *read_nymeric(int from)
 {
-	printf("%s\n","insert nymeric" );
-	char read [100] = {0};
-	scanf("%s",&read);
-	printf("\n");
-	char *nymeric = (char*)calloc((strlen(read)+1), sizeof(char));
-	for (int i = 0; i < strlen(read); i++)
+	int check = 1;
+	while(check == 1)
 	{
-		nymeric[i] = read[i];
+		printf("%s\n","insert nymeric");
+		char read [100] = {0};
+		while(strlen(read) == 0)
+		{
+			scanf("%s",&read);
+			printf("\n");
+		}
+		check = nymeric_verification(from, read);
+		if (check == 1)
+		{
+			printf("%s\n","invalid nymeric" );
+		}
+		if (check == 0)
+		{
+			char *nymeric = (char*)calloc((strlen(read)+1) , sizeof(char));
+			for (int i = 0; i < strlen(read); i++)
+				{
+					nymeric[i] = read[i];
+				}
+			return(nymeric);
+		}
 	}
-	int check = 0;
-	check = nymeric_verification(from, nymeric);
-	if (check == 1)
-	{
-		printf("%s\n","invalid nymeric" );
-		exit(0);
-	}
-	return(nymeric);
 }
 
 int read_to()
@@ -91,6 +118,8 @@ void string_reverse(int *string, int lenght , int c, int count)
 
 int to_new_redix(int *new_nymeric_int ,int dex, int to)
 {
+	if (dex == -1)
+		return(-1);
 	int count = 0;
 	int size = 10;
 	while (dex >= to)
@@ -132,27 +161,38 @@ int to_dex(int *nymeric_int, int from , int size)
 
 char *translation(int from, int to, char *nymeric)
 {
-	char library[] ="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	char library1[] ="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	char library2[] ="0123456789abcdefghijklmnopqrstuvwxyz";
 	int nymeric_int [strlen(nymeric)-1];
 	for (int i = 0; i < strlen(nymeric); i++)
 	{
 		for (int k = 0; k < from ; k++)
 		{
-			if (library[k] == nymeric[i])
+			if (library1[k] == nymeric[i])
+			{
+				nymeric_int[i] = k;
+
+			}
+			if ( k > 9 && library2[k] == nymeric[i])
 			{
 				nymeric_int[i] = k;
 			}
 		}
+		printf("  %d", nymeric_int[i] );
 	}
-	int dex = to_dex(nymeric_int, from , strlen(nymeric)-1);
+	long int dex = to_dex(nymeric_int, from , strlen(nymeric));
 	int *new_nymeric_int = (int*)calloc(10, sizeof(int));
 	int lenght = to_new_redix(new_nymeric_int , dex, to);
 	char *new_nymeric =(char*)calloc((lenght+1), sizeof(char));
+	if (lenght == -1)
+	{
+		nymeric_int[0] = '*';
+		return(new_nymeric);
+	}
 	for (int i = 0; i < lenght; i++)
 	{
-		new_nymeric[i] = library[new_nymeric_int[i]];
+		new_nymeric[i] = library1[new_nymeric_int[i]];
 	}
-	printf("%s\n",new_nymeric );
 	free(new_nymeric_int);
 	return(new_nymeric);
 }
@@ -163,7 +203,8 @@ int main()
 	char *nymeric = read_nymeric(from);
 	int to = read_to();
 	int flag = 0;
-	printf("nymeric %s\n", nymeric );
+	printf("nymeric %s", nymeric );
+	printf("\n");
 	if (nymeric[0] == '-')
 	{
 		flag = 1;
@@ -174,6 +215,13 @@ int main()
 		nymeric[(strlen(nymeric) - 1)] = ' ';
 	}
 	char *new_nymeric = translation(from , to , nymeric);
+	if (new_nymeric[0] == '*')
+	{
+		printf("%s\n","error: to huge nymeric" );
+		free (new_nymeric);
+		free (nymeric);
+		return(-1);
+	}
 	if (flag == 1)
 	{
 		new_nymeric =(char*)realloc(new_nymeric, sizeof(char) *(strlen(new_nymeric) + 2));
