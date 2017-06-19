@@ -1,0 +1,137 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct graph {
+	int number;
+	int neigh_num;
+	struct graph **neighbors;
+} graph;
+
+typedef struct list{
+	struct graph* vertex;
+	struct list* next;
+} list;
+
+void free_vertices(graph **vertices , int ver_num)
+{
+	for(int i = 0 ; i < ver_num ; i++)
+		free(vertices[i]);
+	free(vertices);
+}
+
+void list_free(list *queue_head)
+{
+	while(queue_head != NULL){
+		list *temp = queue_head;
+		queue_head = queue_head -> next;
+		free(temp);
+	}
+}
+
+void peek(list *queue_head)
+{
+	list *queue_cur = queue_head;
+	while(queue_cur != NULL){
+		printf("%d  ", queue_cur -> vertex -> number );
+		queue_cur = queue_cur -> next;
+	}
+	printf("\n");
+}
+
+list **queue_create(list **queue_heads , graph *vertices , int *num_queue , int *max_queue)
+{
+	queue_heads[*num_queue] = (list*)malloc(sizeof(list));
+	queue_heads[*num_queue] -> vertex = vertices;
+	queue_heads[*num_queue] -> next = NULL;
+	*num_queue += 1;
+	if(*num_queue == *max_queue){
+		*max_queue *= 2;
+		queue_heads = realloc(queue_heads , *max_queue);
+		for(int i = *num_queue; i < *max_queue ; i++)
+			queue_heads[i] = NULL;
+	}
+	return(queue_heads);
+}
+
+list *push(list *queue_tail , list *queue_cur , int neigh_id)
+{
+	list *temp = (list*)malloc(sizeof(list));
+	temp -> vertex = queue_cur -> vertex -> neighbors[neigh_id];
+	temp -> next = NULL;
+	queue_tail -> next = temp;
+	queue_tail = temp;
+	return(queue_tail);
+}
+
+list **graph_detour(graph **vertices , int ver_num)
+{
+	int *marked = (int*)calloc(ver_num , sizeof(int));
+	int count = 0;
+	int max_queue = 4;
+	int num_queue = 0;
+	list **queue_heads = (list**)calloc(max_queue , sizeof(list*));
+	for(int i = 0; i < max_queue ; i++ )
+		queue_heads[i] = NULL;
+	queue_heads = queue_create(queue_heads ,vertices[0] , &num_queue ,&max_queue);
+	list *queue_tail = queue_heads[0];
+	list *queue_cur = queue_heads[0];
+	marked[count] = queue_heads[0] -> vertex -> number;
+	count++;
+	int found = 0;
+	while(queue_cur != NULL){
+		for(int i = 0 ; i < ver_num ; i++){
+			if(queue_cur -> vertex -> neighbors[i] == NULL)
+				break;
+			for(int k = 0 ; k < count ; k++)
+				if(queue_cur -> vertex -> neighbors[i] -> number == marked[k]){
+					found = 1;
+					break;
+				}
+			if( found == 0 ){
+				queue_tail = push(queue_tail , queue_cur ,i);
+				marked[count] = queue_tail -> vertex -> number;
+				count++;
+			}
+			found = 0;
+		}
+		found = 0;
+		queue_cur = queue_cur -> next;
+		if ((queue_cur == NULL) && (count != ver_num)){
+			for(int i = 1; i < ver_num ; i++){
+				for(int k = 0; k < count ; k++)
+					if( vertices[i] -> number != marked[k]){
+						found++;
+					}
+				if( found == count ){
+					peek(queue_heads[num_queue-1]);
+					queue_heads = queue_create(queue_heads ,vertices[i] , &num_queue , &max_queue);
+					queue_cur = queue_heads[num_queue-1];
+					queue_tail = queue_cur;
+					marked[count] = queue_tail -> vertex -> number;
+					count++;
+					break;
+				}
+				else
+					found = 0;
+			}
+			found = 0;
+		}
+	}
+	peek(queue_heads[num_queue-1]);
+	free(marked);
+	return(queue_heads);
+}
+
+int main(int argc, char *argv[])
+{
+	FILE *input = fopen(argv[1], "r");
+	int ver_num = 0;
+	graph **vertices = build_graph(input, &ver_num);
+	list **queue_heads = graph_detour(vertices , ver_num);
+	for(int i = 0 ; queue_heads[i] != NULL; i++){
+		list_free(queue_heads[i]);
+	}
+	free(queue_heads);
+	free_vertices(vertices , ver_num);
+	return 0;
+}
